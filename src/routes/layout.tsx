@@ -1,27 +1,18 @@
-import { component$, Slot } from '@builder.io/qwik';
-import { routeLoader$ } from '@builder.io/qwik-city';
+import { component$, Slot } from "@builder.io/qwik";
+import AuthProvider from "~/components/auth-provider/auth-provider";
 
-import Header from '~/components/starter/header/header';
-import Footer from '~/components/starter/footer/footer';
-
-export const useServerTimeLoader = routeLoader$(() => {
-  return {
-    date: new Date().toISOString(),
-  };
-});
+const oidcConfig = {
+  authority: "<your authority>",
+  client_id: "<your client id>",
+  redirect_uri: "<your redirect uri>",
+};
 
 export default component$(() => {
   return (
-    <div class="page">
+    <AuthProvider {...oidcConfig}>
       <main>
-        <Header />
         <Slot />
       </main>
-      <div class="section dark">
-        <div class="container">
-          <Footer />
-        </div>
-      </div>
-    </div>
+    </AuthProvider>
   );
 });

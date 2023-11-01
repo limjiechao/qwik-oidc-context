@@ -11,68 +11,59 @@
   "tasks": {
     "build": {
       "name": "build",
-      "command": "npm run build",
-      "runAtStart": false
+      "command": "npm run build"
     },
     "build.client": {
       "name": "build.client",
-      "command": "npm run build.client",
-      "runAtStart": false
+      "command": "npm run build.client"
     },
     "build.preview": {
       "name": "build.preview",
-      "command": "npm run build.preview",
-      "runAtStart": false
+      "command": "npm run build.preview"
     },
     "build.types": {
       "name": "build.types",
-      "command": "npm run build.types",
-      "runAtStart": false
+      "command": "npm run build.types"
     },
     "deploy": {
       "name": "deploy",
-      "command": "npm run deploy",
-      "runAtStart": false
+      "command": "npm run deploy"
     },
     "dev": {
       "name": "dev",
       "command": "npm run dev",
-      "runAtStart": true
+      "runAtStart": true,
+      "preview": {
+        "port": 5173
+      }
     },
     "dev.debug": {
       "name": "dev.debug",
-      "command": "npm run dev.debug",
-      "runAtStart": false
+      "command": "npm run dev.debug"
     },
     "fmt": {
       "name": "fmt",
-      "command": "npm run fmt",
-      "runAtStart": false
+      "command": "npm run fmt"
     },
     "fmt.check": {
       "name": "fmt.check",
-      "command": "npm run fmt.check",
-      "runAtStart": false
+      "command": "npm run fmt.check"
     },
     "lint": {
       "name": "lint",
-      "command": "npm run lint",
-      "runAtStart": false
+      "command": "npm run lint"
     },
     "preview": {
       "name": "preview",
-      "command": "npm run preview",
-      "runAtStart": false
+      "command": "npm run preview"
     },
     "start": {
       "name": "start",
-      "command": "npm run start",
-      "runAtStart": false
+      "command": "npm run start"
     },
     "qwik": {
       "name": "qwik",
-      "command": "npm run qwik",
-      "runAtStart": false
+      "command": "npm run qwik"
     }
   }
 }
