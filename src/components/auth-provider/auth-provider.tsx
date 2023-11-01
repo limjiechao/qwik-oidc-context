@@ -21,7 +21,6 @@ import type { AuthContext, MaybeAuthContext } from "~/contexts/auth";
 import { useProvideAuthContext } from "~/contexts/auth";
 import {
   hasAuthParams,
-  normalizeError,
   loginError,
   unsupportedEnvironmentErrorMessage,
   throwUnsupportedEnvironmentError,
@@ -233,7 +232,7 @@ const AuthProvider = component$(
                 ? async (
                     args: ProcessResourceOwnerPasswordCredentialsArgs & never[],
                   ) => {
-                    state.dispatch({
+                    store.dispatch({
                       type: "NAVIGATOR_INIT",
                       method: key,
                     });
@@ -241,11 +240,11 @@ const AuthProvider = component$(
                     try {
                       return await _userManager[key](args);
                     } catch (error) {
-                      state.dispatch({ type: "ERROR", error: error as Error });
+                      store.dispatch({ type: "ERROR", error: error as Error });
 
                       return null;
                     } finally {
-                      state.dispatch({ type: "NAVIGATOR_CLOSE" });
+                      store.dispatch({ type: "NAVIGATOR_CLOSE" });
                     }
                   }
                 : throwUnsupportedEnvironmentError(key),
@@ -276,9 +275,9 @@ const AuthProvider = component$(
           }
           user = !user ? await userManager.value.getUser() : user;
 
-          state.dispatch({ type: "INITIALISED", user });
+          store.dispatch({ type: "INITIALISED", user });
         } catch (error) {
-          state.dispatch({ type: "ERROR", error: loginError(error) });
+          store.dispatch({ type: "ERROR", error: loginError(error) });
         }
       })();
     });
@@ -292,19 +291,19 @@ const AuthProvider = component$(
 
       // event `UserLoaded` (e.g. initial load, silent renew success)
       const handleUserLoaded = (user: User) => {
-        state.dispatch({ type: "USER_LOADED", user });
+        store.dispatch({ type: "USER_LOADED", user });
       };
       userManager.value.events.addUserLoaded(handleUserLoaded);
 
       // event `UserUnloaded` (e.g. userManager.removeUser)
       const handleUserUnloaded = () => {
-        state.dispatch({ type: "USER_UNLOADED" });
+        store.dispatch({ type: "USER_UNLOADED" });
       };
       userManager.value.events.addUserUnloaded(handleUserUnloaded);
 
       // event `SilentRenewError` (silent renew error)
       const handleSilentRenewError = (error: Error) => {
-        state.dispatch({ type: "ERROR", error });
+        store.dispatch({ type: "ERROR", error });
       };
       userManager.value.events.addSilentRenewError(handleSilentRenewError);
 
