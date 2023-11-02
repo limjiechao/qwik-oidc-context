@@ -100,6 +100,11 @@ export type StoreDispatch = QRL<
   ) => void
 >;
 
+export type Store = {
+  dispatch: StoreDispatch;
+  auth: NoSerialize<AuthState>;
+};
+
 export type AuthProviderProps = Pick<
   UserManagerSettings,
   'redirect_uri' | 'client_id' | 'authority'
@@ -171,27 +176,26 @@ const AuthProvider = component$(
       );
     });
 
-    const store = useStore<{
-      dispatch: StoreDispatch;
-      auth: NoSerialize<AuthState>;
-    }>({
+    const store = useStore<Store>({
       dispatch: $(function (
         this: {
           auth: NoSerialize<AuthState>;
         },
         action: StoreAction
       ): void {
+        const previousAuthState = this.auth ?? initialAuthState;
+
         switch (action.type) {
           case 'INITIALIZATION':
             this.auth = noSerialize({
-              ...this.auth,
+              ...previousAuthState,
               ...initialAuthState,
             }) satisfies NoSerialize<AuthState>;
             break;
           case 'INITIALISED':
           case 'USER_LOADED':
             this.auth = noSerialize({
-              ...this.auth,
+              ...previousAuthState,
               user: action.user,
               isLoading: false,
               isAuthenticated: action.user ? !action.user.expired : false,
@@ -200,14 +204,14 @@ const AuthProvider = component$(
             break;
           case 'USER_UNLOADED':
             this.auth = noSerialize({
-              ...this.auth,
+              ...previousAuthState,
               user: undefined,
               isAuthenticated: false,
             }) satisfies NoSerialize<AuthState>;
             break;
           case 'NAVIGATOR_INIT':
             this.auth = noSerialize({
-              ...this.auth,
+              ...previousAuthState,
               isLoading: true,
               activeNavigator: action.method,
             }) satisfies NoSerialize<AuthState>;
@@ -215,21 +219,21 @@ const AuthProvider = component$(
           case 'NAVIGATOR_CLOSE':
             // we intentionally don't handle cases where multiple concurrent navigators are open
             this.auth = noSerialize({
-              ...this.auth,
+              ...previousAuthState,
               isLoading: false,
               activeNavigator: undefined,
             }) satisfies NoSerialize<AuthState>;
             break;
           case 'ERROR':
             this.auth = noSerialize({
-              ...this.auth,
+              ...previousAuthState,
               isLoading: false,
               error: action.error,
             }) satisfies NoSerialize<AuthState>;
             break;
           default:
             this.auth = noSerialize({
-              ...this.auth,
+              ...previousAuthState,
               isLoading: false,
               error: new Error(`unknown type ${action['type'] as string}`),
             }) satisfies NoSerialize<AuthState>;
@@ -272,7 +276,7 @@ const AuthProvider = component$(
       ) satisfies Pick<UserManager, (typeof userManagerContextKeys)[number]>;
 
       const statefulNavigationMethods = mapToStatefulNavigatorMethods(
-        store.dispatch,
+        store,
         _userManager
       );
 

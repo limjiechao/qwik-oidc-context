@@ -23,7 +23,7 @@ import {
   START_SILENT_RENEW,
   STOP_SILENT_RENEW,
 } from '~/constants/auth';
-import type { StoreDispatch } from '~/components/auth-provider/auth-provider';
+import type { Store } from '~/components/auth-provider/auth-provider';
 
 export const hasAuthParams = (location = window.location): boolean => {
   // response_mode: query
@@ -123,21 +123,21 @@ export type BoundUserManagerMethods = ReturnType<
 >;
 
 export const mapToStatefulNavigatorMethods = (
-  dispatch: StoreDispatch,
+  store: Store,
   userManager: UserManager
 ) => {
   const SIGNIN_POPUP_METHOD = async (args: SigninPopupArgs) => {
     try {
       return await userManager[SIGNIN_POPUP](args);
     } catch (error) {
-      await dispatch({
+      await store.dispatch({
         type: 'ERROR',
         error: error as Error,
       });
 
       return null;
     } finally {
-      await dispatch({ type: 'NAVIGATOR_CLOSE' });
+      await store.dispatch({ type: 'NAVIGATOR_CLOSE' });
     }
   };
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -148,14 +148,14 @@ export const mapToStatefulNavigatorMethods = (
     try {
       return await userManager[SIGNIN_SILENT](args);
     } catch (error) {
-      await dispatch({
+      await store.dispatch({
         type: 'ERROR',
         error: error as Error,
       });
 
       return null;
     } finally {
-      await dispatch({ type: 'NAVIGATOR_CLOSE' });
+      await store.dispatch({ type: 'NAVIGATOR_CLOSE' });
     }
   };
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -166,14 +166,14 @@ export const mapToStatefulNavigatorMethods = (
     try {
       return await userManager[SIGNIN_REDIRECT](args);
     } catch (error) {
-      await dispatch({
+      await store.dispatch({
         type: 'ERROR',
         error: error as Error,
       });
 
       return null;
     } finally {
-      await dispatch({ type: 'NAVIGATOR_CLOSE' });
+      await store.dispatch({ type: 'NAVIGATOR_CLOSE' });
     }
   };
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -186,14 +186,14 @@ export const mapToStatefulNavigatorMethods = (
     try {
       return await userManager[SIGNIN_RESOURCE_OWNER_CREDENTIALS](args);
     } catch (error) {
-      await dispatch({
+      await store.dispatch({
         type: 'ERROR',
         error: error as Error,
       });
 
       return null;
     } finally {
-      await dispatch({ type: 'NAVIGATOR_CLOSE' });
+      await store.dispatch({ type: 'NAVIGATOR_CLOSE' });
     }
   };
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -206,14 +206,14 @@ export const mapToStatefulNavigatorMethods = (
     try {
       return await userManager[SIGNOUT_REDIRECT](args);
     } catch (error) {
-      await dispatch({
+      await store.dispatch({
         type: 'ERROR',
         error: error as Error,
       });
 
       return null;
     } finally {
-      await dispatch({ type: 'NAVIGATOR_CLOSE' });
+      await store.dispatch({ type: 'NAVIGATOR_CLOSE' });
     }
   };
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -224,14 +224,14 @@ export const mapToStatefulNavigatorMethods = (
     try {
       return await userManager[SIGNOUT_POPUP](args);
     } catch (error) {
-      await dispatch({
+      await store.dispatch({
         type: 'ERROR',
         error: error as Error,
       });
 
       return null;
     } finally {
-      await dispatch({ type: 'NAVIGATOR_CLOSE' });
+      await store.dispatch({ type: 'NAVIGATOR_CLOSE' });
     }
   };
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -242,14 +242,14 @@ export const mapToStatefulNavigatorMethods = (
     try {
       return await userManager[SIGNOUT_SILENT](args);
     } catch (error) {
-      await dispatch({
+      await store.dispatch({
         type: 'ERROR',
         error: error as Error,
       });
 
       return null;
     } finally {
-      await dispatch({ type: 'NAVIGATOR_CLOSE' });
+      await store.dispatch({ type: 'NAVIGATOR_CLOSE' });
     }
   };
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
