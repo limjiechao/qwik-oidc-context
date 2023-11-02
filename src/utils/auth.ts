@@ -8,7 +8,7 @@ import type {
   SignoutSilentArgs,
   UserManager,
 } from 'oidc-client-ts';
-import type { UserManagerContextKey } from '~/constants/auth';
+import type { NavigatorKey, UserManagerContextKey } from '~/constants/auth';
 import {
   CLEAR_STALE_STATE,
   QUERY_SESSION_STATUS,
@@ -24,6 +24,7 @@ import {
   STOP_SILENT_RENEW,
 } from '~/constants/auth';
 import type { Store } from '~/components/auth-provider/auth-provider';
+import type { AuthContext } from '~/contexts/auth';
 
 export const hasAuthParams = (location = window.location): boolean => {
   // response_mode: query
@@ -60,10 +61,6 @@ export const loginError = normalizeError('Login failed');
 
 export const unsupportedEnvironmentErrorMessage = (methodName: string) =>
   `UserManager#${methodName} was called from an unsupported context. If this is a server-rendered page, defer this call with useEffect() or pass a custom UserManager implementation.`;
-
-export const throwUnsupportedEnvironmentError = (methodName: string) => () => {
-  throw new Error(unsupportedEnvironmentErrorMessage(methodName));
-};
 
 export const shallowCloneUserManagerSettingsAndEvents = (
   userManager: UserManager
@@ -265,6 +262,8 @@ export const mapToStatefulNavigatorMethods = (
     [SIGNOUT_POPUP]: SIGNOUT_POPUP_METHOD,
     [SIGNOUT_REDIRECT]: SIGNOUT_REDIRECT_METHOD,
     [SIGNOUT_SILENT]: SIGNOUT_SILENT_METHOD,
+  } as const satisfies {
+    [Key in NavigatorKey]: AuthContext[Key];
   };
 };
 export type StatefulNavigatorMethods = ReturnType<

@@ -2,7 +2,7 @@ import type { AuthState } from '~/components/auth-provider/auth-provider';
 import type { UserManager } from 'oidc-client-ts';
 import type { ArrayItem } from '~/utils/types';
 
-export const initialAuthState: AuthState = {
+export const INITIAL_AUTH_STATE: AuthState = {
   isLoading: true,
   isAuthenticated: false,
 } as const satisfies AuthState;
@@ -13,7 +13,7 @@ export const REVOKE_TOKENS = 'revokeTokens';
 export const START_SILENT_RENEW = 'startSilentRenew';
 export const STOP_SILENT_RENEW = 'stopSilentRenew';
 
-export const userManagerContextKeys = [
+export const USER_MANAGER_CONTEXT_KEYS = [
   CLEAR_STALE_STATE,
   QUERY_SESSION_STATUS,
   REVOKE_TOKENS,
@@ -21,7 +21,7 @@ export const userManagerContextKeys = [
   STOP_SILENT_RENEW,
 ] as const satisfies Readonly<(keyof UserManager)[]>;
 
-export type UserManagerContextKey = ArrayItem<typeof userManagerContextKeys>;
+export type UserManagerContextKey = ArrayItem<typeof USER_MANAGER_CONTEXT_KEYS>;
 
 export const SIGNIN_POPUP = 'signinPopup';
 export const SIGNIN_SILENT = 'signinSilent';
@@ -32,7 +32,7 @@ export const SIGNOUT_POPUP = 'signoutPopup';
 export const SIGNOUT_REDIRECT = 'signoutRedirect';
 export const SIGNOUT_SILENT = 'signoutSilent';
 
-export const navigatorKeys = [
+export const NAVIGATOR_KEYS = [
   SIGNIN_POPUP,
   SIGNIN_SILENT,
   SIGNIN_REDIRECT,
@@ -41,3 +41,4 @@ export const navigatorKeys = [
   SIGNOUT_REDIRECT,
   SIGNOUT_SILENT,
 ] as const satisfies Readonly<(keyof UserManager)[]>;
+export type NavigatorKey = ArrayItem<typeof NAVIGATOR_KEYS>;

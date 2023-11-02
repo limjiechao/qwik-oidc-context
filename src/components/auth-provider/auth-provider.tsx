@@ -30,8 +30,8 @@ import {
   shallowCloneUserManagerSettingsAndEvents,
   unsupportedEnvironmentErrorMessage,
 } from '~/utils/auth';
-import type { userManagerContextKeys } from '~/constants/auth';
-import { initialAuthState } from '~/constants/auth';
+import type { USER_MANAGER_CONTEXT_KEYS } from '~/constants/auth';
+import { INITIAL_AUTH_STATE } from '~/constants/auth';
 
 // The auth state which, when combined with the auth methods, make up the return object of the `useAuth` hook.
 export interface AuthState {
@@ -183,13 +183,13 @@ const AuthProvider = component$(
         },
         action: StoreAction
       ): void {
-        const previousAuthState = this.auth ?? initialAuthState;
+        const previousAuthState = this.auth ?? INITIAL_AUTH_STATE;
 
         switch (action.type) {
           case 'INITIALIZATION':
             this.auth = noSerialize({
               ...previousAuthState,
-              ...initialAuthState,
+              ...INITIAL_AUTH_STATE,
             }) satisfies NoSerialize<AuthState>;
             break;
           case 'INITIALISED':
@@ -254,9 +254,8 @@ const AuthProvider = component$(
     // type UserManagerContext = {
     //   settings: AuthContext['settings'];
     //   events: AuthContext['events'];
-    // } & Pick<UserManager, (typeof userManagerContextKeys)[number]> &
-    //   Pick<UserManager, (typeof navigatorKeys)[number]>;
-
+    // } & Pick<UserManager, (typeof USER_MANAGER_CONTEXT_KEYS)[number]> &
+    //   Pick<UserManager, (typeof NAVIGATOR_KEYS)[number]>;
     type UserManagerContext = {
       settings: AuthContext['settings'];
       events: AuthContext['events'];
@@ -273,7 +272,7 @@ const AuthProvider = component$(
 
       const userManagerMethods = shallowCloneAndBindThisToUserManagerMethods(
         _userManager
-      ) satisfies Pick<UserManager, (typeof userManagerContextKeys)[number]>;
+      ) satisfies Pick<UserManager, (typeof USER_MANAGER_CONTEXT_KEYS)[number]>;
 
       const statefulNavigationMethods = mapToStatefulNavigatorMethods(
         store,
@@ -356,7 +355,6 @@ const AuthProvider = component$(
     });
 
     const authContext = useSignal<NoSerialize<MaybeAuthContext>>();
-
     // Initialize `authContext`
     useVisibleTask$(({ track }) => {
       track(() => [userManagerContext.value, store.auth]);
