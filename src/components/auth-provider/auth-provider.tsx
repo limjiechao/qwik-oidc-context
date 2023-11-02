@@ -1,21 +1,21 @@
-import type { PropFunction } from '@builder.io/qwik';
+import type { PropFunction, QRL } from '@builder.io/qwik';
 import {
+  $,
   component$,
+  noSerialize,
+  type NoSerialize,
   Slot,
   useSignal,
   useStore,
   useVisibleTask$,
-  $,
-  noSerialize,
-  type NoSerialize,
 } from '@builder.io/qwik';
-import { UserManager, type UserManagerSettings } from 'oidc-client-ts';
 import type {
-  SignoutRedirectArgs,
   SignoutPopupArgs,
+  SignoutRedirectArgs,
   SignoutSilentArgs,
   User,
 } from 'oidc-client-ts';
+import { UserManager, type UserManagerSettings } from 'oidc-client-ts';
 import type { AuthContext, MaybeAuthContext } from '~/contexts/auth';
 import { useProvideAuthContext } from '~/contexts/auth';
 import type {
@@ -25,10 +25,10 @@ import type {
 import {
   hasAuthParams,
   loginError,
-  unsupportedEnvironmentErrorMessage,
+  mapToStatefulNavigatorMethods,
   shallowCloneAndBindThisToUserManagerMethods,
   shallowCloneUserManagerSettingsAndEvents,
-  mapToStatefulNavigatorMethods,
+  unsupportedEnvironmentErrorMessage,
 } from '~/utils/auth';
 import type { userManagerContextKeys } from '~/constants/auth';
 import { initialAuthState } from '~/constants/auth';
@@ -43,12 +43,12 @@ export interface AuthState {
   /**
    * True when the library has been initialized and no navigator request is in progress.
    */
-  isLoading: boolean;
+  isLoading?: boolean;
 
   /**
    * True while the user has a valid access token.
    */
-  isAuthenticated: boolean;
+  isAuthenticated?: boolean;
 
   /**
    * Tracks the status of most recent signin/signout request method.
@@ -68,7 +68,10 @@ export interface AuthState {
   error?: Error;
 }
 
-export type StoreDispatch =
+export type StoreAction =
+  | {
+      type: 'INITIALIZATION';
+    }
   | {
       type: 'INITIALISED' | 'USER_LOADED';
       user: User | null;
@@ -87,6 +90,15 @@ export type StoreDispatch =
       type: 'ERROR';
       error: Error;
     };
+
+export type StoreDispatch = QRL<
+  (
+    this: {
+      auth: NoSerialize<AuthState>;
+    },
+    action: StoreAction
+  ) => void
+>;
 
 export type AuthProviderProps = Pick<
   UserManagerSettings,
@@ -159,57 +171,76 @@ const AuthProvider = component$(
       );
     });
 
-    const store = useStore({
+    const store = useStore<{
+      dispatch: StoreDispatch;
+      auth: NoSerialize<AuthState>;
+    }>({
       dispatch: $(function (
         this: {
-          auth: AuthState;
+          auth: NoSerialize<AuthState>;
         },
-        action: StoreDispatch
-      ): AuthState {
+        action: StoreAction
+      ): void {
         switch (action.type) {
+          case 'INITIALIZATION':
+            this.auth = noSerialize({
+              ...this.auth,
+              ...initialAuthState,
+            }) satisfies NoSerialize<AuthState>;
+            break;
           case 'INITIALISED':
           case 'USER_LOADED':
-            return {
+            this.auth = noSerialize({
               ...this.auth,
               user: action.user,
               isLoading: false,
               isAuthenticated: action.user ? !action.user.expired : false,
               error: undefined,
-            } satisfies AuthState;
+            }) satisfies NoSerialize<AuthState>;
+            break;
           case 'USER_UNLOADED':
-            return {
+            this.auth = noSerialize({
               ...this.auth,
               user: undefined,
               isAuthenticated: false,
-            } satisfies AuthState;
+            }) satisfies NoSerialize<AuthState>;
+            break;
           case 'NAVIGATOR_INIT':
-            return {
+            this.auth = noSerialize({
               ...this.auth,
               isLoading: true,
               activeNavigator: action.method,
-            } satisfies AuthState;
+            }) satisfies NoSerialize<AuthState>;
+            break;
           case 'NAVIGATOR_CLOSE':
             // we intentionally don't handle cases where multiple concurrent navigators are open
-            return {
+            this.auth = noSerialize({
               ...this.auth,
               isLoading: false,
               activeNavigator: undefined,
-            } satisfies AuthState;
+            }) satisfies NoSerialize<AuthState>;
+            break;
           case 'ERROR':
-            return {
+            this.auth = noSerialize({
               ...this.auth,
               isLoading: false,
               error: action.error,
-            } satisfies AuthState;
+            }) satisfies NoSerialize<AuthState>;
+            break;
           default:
-            return {
+            this.auth = noSerialize({
               ...this.auth,
               isLoading: false,
               error: new Error(`unknown type ${action['type'] as string}`),
-            } satisfies AuthState;
+            }) satisfies NoSerialize<AuthState>;
+            break;
         }
       }),
-      auth: noSerialize({ ...initialAuthState }),
+      auth: noSerialize(undefined),
+    });
+    // Initialize store upon hitting browser
+    useVisibleTask$(() => {
+      void store.dispatch({ type: 'INITIALIZATION' });
     });
 
     /**
@@ -280,7 +311,7 @@ const AuthProvider = component$(
       })();
     });
 
-    // register to `userManager` events
+    // Register to `userManager` events
     useVisibleTask$(({ track, cleanup }) => {
       // Dependency array: [userManager]
       track(() => [userManager.value]);

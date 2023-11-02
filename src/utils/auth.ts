@@ -1,4 +1,13 @@
-import type { UserManager } from 'oidc-client-ts';
+import type {
+  ProcessResourceOwnerPasswordCredentialsArgs,
+  SigninPopupArgs,
+  SigninRedirectArgs,
+  SigninSilentArgs,
+  SignoutPopupArgs,
+  SignoutRedirectArgs,
+  SignoutSilentArgs,
+  UserManager,
+} from 'oidc-client-ts';
 import type { UserManagerContextKey } from '~/constants/auth';
 import {
   CLEAR_STALE_STATE,
@@ -14,22 +23,7 @@ import {
   START_SILENT_RENEW,
   STOP_SILENT_RENEW,
 } from '~/constants/auth';
-import type {
-  ProcessResourceOwnerPasswordCredentialsArgs,
-  SignoutPopupArgs,
-  SignoutRedirectArgs,
-  SignoutSilentArgs,
-} from 'oidc-client-ts';
-import type { QRL } from '@builder.io/qwik';
-import type {
-  AuthState,
-  StoreDispatch,
-} from '~/components/auth-provider/auth-provider';
-import type {
-  SigninPopupArgs,
-  SigninRedirectArgs,
-  SigninSilentArgs,
-} from 'oidc-client-ts';
+import type { StoreDispatch } from '~/components/auth-provider/auth-provider';
 
 export const hasAuthParams = (location = window.location): boolean => {
   // response_mode: query
@@ -129,14 +123,7 @@ export type BoundUserManagerMethods = ReturnType<
 >;
 
 export const mapToStatefulNavigatorMethods = (
-  dispatch: QRL<
-    (
-      this: {
-        auth: AuthState;
-      },
-      action: StoreDispatch
-    ) => AuthState
-  >,
+  dispatch: StoreDispatch,
   userManager: UserManager
 ) => {
   const SIGNIN_POPUP_METHOD = async (args: SigninPopupArgs) => {
