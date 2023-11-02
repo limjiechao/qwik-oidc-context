@@ -8,7 +8,7 @@ import type {
   SignoutSilentArgs,
   UserManager,
 } from 'oidc-client-ts';
-import type { NavigatorKey, UserManagerContextKey } from '~/constants/auth';
+import type { NavigatorKey, UserManagerContextKey } from '~/services/oidc';
 import {
   CLEAR_STALE_STATE,
   QUERY_SESSION_STATUS,
@@ -22,45 +22,10 @@ import {
   SIGNOUT_SILENT,
   START_SILENT_RENEW,
   STOP_SILENT_RENEW,
-} from '~/constants/auth';
-import type { Store } from '~/components/auth-provider/auth-provider';
-import type { AuthContext } from '~/contexts/auth';
-
-export const hasAuthParams = (location = window.location): boolean => {
-  // response_mode: query
-  let searchParams = new URLSearchParams(location.search);
-  if (
-    (searchParams.get('code') || searchParams.get('error')) &&
-    searchParams.get('state')
-  ) {
-    return true;
-  }
-
-  // response_mode: fragment
-  searchParams = new URLSearchParams(location.hash.replace('#', '?'));
-  if (
-    (searchParams.get('code') || searchParams.get('error')) &&
-    searchParams.get('state')
-  ) {
-    return true;
-  }
-
-  return false;
-};
-
-export const normalizeError =
-  (fallbackMessage: string) =>
-  (error: unknown): Error => {
-    if (error instanceof Error) {
-      return error;
-    }
-    return new Error(fallbackMessage);
-  };
-
-export const loginError = normalizeError('Login failed');
-
-export const unsupportedEnvironmentErrorMessage = (methodName: string) =>
-  `UserManager#${methodName} was called from an unsupported context. If this is a server-rendered page, defer this call with useEffect() or pass a custom UserManager implementation.`;
+  unsupportedEnvironmentErrorMessage,
+} from '~/services/oidc';
+import type { Store } from '~/services/oidc';
+import type { AuthContext } from '~/services/oidc';
 
 export const shallowCloneUserManagerSettingsAndEvents = (
   userManager: UserManager
@@ -71,7 +36,10 @@ export const shallowCloneUserManagerSettingsAndEvents = (
   }) as const;
 
 /**
- * NOTE: We are faithfully refactoring `react-oidc-context`. When we better understand what's happening under the hood, we will remove truly unnecessary checks
+ * NOTE: We are faithfully refactoring `react-oidc-context`.
+ *
+ * When we better understand what's happening under the hood
+ * we will remove truly unnecessary checks
  */
 export const shallowCloneAndBindThisToUserManagerMethods = (
   userManager: UserManager

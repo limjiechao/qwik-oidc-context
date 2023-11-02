@@ -19,7 +19,7 @@ import type {
   SignoutSilentArgs,
   SigninResourceOwnerCredentialsArgs,
 } from 'oidc-client-ts';
-import type { AuthState } from '~/components/auth-provider/auth-provider';
+import type { AuthState } from '~/services/oidc';
 
 export interface AuthContext extends AuthState {
   /**

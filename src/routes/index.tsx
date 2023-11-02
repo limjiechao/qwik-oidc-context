@@ -1,6 +1,6 @@
 import { component$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
-import { useAuthContext } from '~/contexts/auth';
+import { useAuthContext } from '~/services/oidc';
 
 export default component$(() => {
   const authContext = useAuthContext();

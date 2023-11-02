@@ -1,4 +1,4 @@
-import type { PropFunction, QRL } from '@builder.io/qwik';
+import type { PropFunction } from '@builder.io/qwik';
 import {
   $,
   component$,
@@ -16,94 +16,25 @@ import type {
   User,
 } from 'oidc-client-ts';
 import { UserManager, type UserManagerSettings } from 'oidc-client-ts';
-import type { AuthContext, MaybeAuthContext } from '~/contexts/auth';
-import { useProvideAuthContext } from '~/contexts/auth';
 import type {
+  AuthContext,
   BoundUserManagerMethods,
+  MaybeAuthContext,
   StatefulNavigatorMethods,
-} from '~/utils/auth';
+  USER_MANAGER_CONTEXT_KEYS,
+} from '~/services/oidc';
 import {
   hasAuthParams,
+  INITIAL_AUTH_STATE,
   loginError,
   mapToStatefulNavigatorMethods,
   shallowCloneAndBindThisToUserManagerMethods,
   shallowCloneUserManagerSettingsAndEvents,
   unsupportedEnvironmentErrorMessage,
-} from '~/utils/auth';
-import type { USER_MANAGER_CONTEXT_KEYS } from '~/constants/auth';
-import { INITIAL_AUTH_STATE } from '~/constants/auth';
-
-// The auth state which, when combined with the auth methods, make up the return object of the `useAuth` hook.
-export interface AuthState {
-  /**
-   * See [User](https://authts.github.io/oidc-client-ts/classes/User.html) for more details.
-   */
-  user?: User | null;
-
-  /**
-   * True when the library has been initialized and no navigator request is in progress.
-   */
-  isLoading?: boolean;
-
-  /**
-   * True while the user has a valid access token.
-   */
-  isAuthenticated?: boolean;
-
-  /**
-   * Tracks the status of most recent signin/signout request method.
-   */
-  activeNavigator?:
-    | 'signinRedirect'
-    | 'signinResourceOwnerCredentials'
-    | 'signinPopup'
-    | 'signinSilent'
-    | 'signoutRedirect'
-    | 'signoutPopup'
-    | 'signoutSilent';
-
-  /**
-   * Was there a signin or silent renew error?
-   */
-  error?: Error;
-}
-
-export type StoreAction =
-  | {
-      type: 'INITIALIZATION';
-    }
-  | {
-      type: 'INITIALISED' | 'USER_LOADED';
-      user: User | null;
-    }
-  | {
-      type: 'USER_UNLOADED';
-    }
-  | {
-      type: 'NAVIGATOR_INIT';
-      method: NonNullable<AuthState['activeNavigator']>;
-    }
-  | {
-      type: 'NAVIGATOR_CLOSE';
-    }
-  | {
-      type: 'ERROR';
-      error: Error;
-    };
-
-export type StoreDispatch = QRL<
-  (
-    this: {
-      auth: NoSerialize<AuthState>;
-    },
-    action: StoreAction
-  ) => void
->;
-
-export type Store = {
-  dispatch: StoreDispatch;
-  auth: NoSerialize<AuthState>;
-};
+  useProvideAuthContext,
+} from '~/services/oidc';
+import type { Store, StoreAction } from '~/services/oidc/store';
+import type { AuthState } from '~/services/oidc/state';
 
 export type AuthProviderProps = Pick<
   UserManagerSettings,
@@ -153,7 +84,7 @@ export type AuthProviderProps = Pick<
 };
 
 // Provides the `AuthContext` to its child components.
-const AuthProvider = component$(
+export const AuthProvider = component$(
   ({
     onSigninCallback,
     skipSigninCallback,
@@ -414,5 +345,3 @@ const AuthProvider = component$(
     return <Slot />;
   }
 );
-
-export default AuthProvider;

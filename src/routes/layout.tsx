@@ -1,5 +1,5 @@
 import { component$, Slot } from '@builder.io/qwik';
-import AuthProvider from '~/components/auth-provider/auth-provider';
+import { AuthProvider } from '~/services/oidc';
 
 const oidcConfig = {
   authority: '<your authority>',

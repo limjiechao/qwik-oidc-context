@@ -1,6 +1,6 @@
-import type { AuthState } from '~/components/auth-provider/auth-provider';
+import type { AuthState } from '~/services/oidc';
 import type { UserManager } from 'oidc-client-ts';
-import type { ArrayItem } from '~/utils/types';
+import type { ArrayItem } from '~/utils/type-helpers';
 
 export const INITIAL_AUTH_STATE: AuthState = {
   isLoading: true,
