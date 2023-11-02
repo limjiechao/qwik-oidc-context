@@ -165,7 +165,7 @@ const AuthProvider = component$(
     const userManager = useSignal<NoSerialize<UserManager>>(
       noSerialize(undefined)
     );
-
+    // Initialize `useManager.value` upon hitting browser
     useVisibleTask$(() => {
       userManager.value = noSerialize(
         new UserManager({
@@ -290,7 +290,10 @@ const AuthProvider = component$(
     const didInitialize = useSignal(false);
     // Check if returning back from authority server
     useVisibleTask$(({ track }) => {
-      // Dependency array: [userManager, skipSigninCallback, onSigninCallback]
+      /**
+       * FIXME: Delete when we're confident we don't need dependency tracking
+       * - Dependency array: [userManager, skipSigninCallback, onSigninCallback]
+       */
       track(() => [userManager.value, skipSigninCallback, onSigninCallback]);
 
       if (!userManager.value || didInitialize.value) return;
@@ -317,7 +320,10 @@ const AuthProvider = component$(
 
     // Register to `userManager` events
     useVisibleTask$(({ track, cleanup }) => {
-      // Dependency array: [userManager]
+      /**
+       * FIXME: Delete when we're confident we don't need dependency tracking
+       * - Dependency array: [userManager]
+       */
       track(() => [userManager.value]);
 
       if (!userManager.value) return undefined;
@@ -351,6 +357,7 @@ const AuthProvider = component$(
 
     const authContext = useSignal<NoSerialize<MaybeAuthContext>>();
 
+    // Initialize `authContext`
     useVisibleTask$(({ track }) => {
       track(() => [userManagerContext.value, store.auth]);
 
@@ -360,7 +367,10 @@ const AuthProvider = component$(
       const _userManagerContext = userManagerContext.value;
       const _storeAuth = store.auth;
 
-      // Dependency array: [userManager, onRemoveUser]
+      /**
+       * FIXME: Delete when we're confident we don't need dependency tracking
+       * - Dependency array: [userManager, onRemoveUser]
+       */
       const removeUser = () => {
         if (!userManager.value)
           throw new Error(unsupportedEnvironmentErrorMessage('removeUser'));
@@ -370,15 +380,24 @@ const AuthProvider = component$(
         return _userManager.removeUser().then(onRemoveUser);
       };
 
-      // Dependency array: [userManagerContext.signoutRedirect, onSignoutRedirect]
+      /**
+       * FIXME: Delete when we're confident we don't need dependency tracking
+       * - Dependency array: [userManagerContext.signoutRedirect, onSignoutRedirect]
+       */
       const signoutRedirect = (args: SignoutRedirectArgs) =>
         _userManagerContext.signoutRedirect(args);
 
-      // Dependency array: [userManagerContext.signoutPopup, onSignoutPopup]
+      /**
+       * FIXME: Delete when we're confident we don't need dependency tracking
+       * - Dependency array: [userManagerContext.signoutPopup, onSignoutPopup]
+       */
       const signoutPopup = (args: SignoutPopupArgs) =>
         _userManagerContext.signoutPopup(args);
 
-      // Dependency array: [userManagerContext.signoutSilent]
+      /**
+       * FIXME: Delete when we're confident we don't need dependency tracking
+       * - Dependency array: [userManagerContext.signoutSilent]
+       */
       const signoutSilent = (args: SignoutSilentArgs) =>
         _userManagerContext.signoutSilent(args);
 
@@ -394,13 +413,7 @@ const AuthProvider = component$(
 
     useProvideAuthContext(authContext);
 
-    return (
-      <>
-        <Slot />
-        <pre>{JSON.stringify(store.auth, null, 4)}</pre>
-        <pre>{JSON.stringify(userManagerContext.value, null, 4)}</pre>
-      </>
-    );
+    return <Slot />;
   }
 );
 
