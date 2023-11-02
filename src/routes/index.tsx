@@ -1,6 +1,6 @@
-import { component$ } from "@builder.io/qwik";
-import type { DocumentHead } from "@builder.io/qwik-city";
-import { useAuthContext } from "~/contexts/auth";
+import { component$ } from '@builder.io/qwik';
+import type { DocumentHead } from '@builder.io/qwik-city';
+import { useAuthContext } from '~/contexts/auth';
 
 export default component$(() => {
   const authContext = useAuthContext();
@@ -16,11 +16,11 @@ export default component$(() => {
   if (authContext.value.isAuthenticated) {
     return (
       <div>
-        Hello {authContext.value.user?.profile.sub}{" "}
+        Hello {authContext.value.user?.profile.sub}{' '}
         <button
           onClick$={() => {
             if (!authContext.value)
-              throw new Error("`authContext.value` is not defined");
+              throw new Error('`authContext.value` is not defined');
 
             void authContext.value.removeUser();
           }}
@@ -36,7 +36,7 @@ export default component$(() => {
       <button
         onClick$={() => {
           if (!authContext.value)
-            throw new Error("`authContext.value` is not defined");
+            throw new Error('`authContext.value` is not defined');
 
           void authContext.value.signinRedirect();
         }}
@@ -48,11 +48,11 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Welcome to Qwik",
+  title: 'Welcome to Qwik',
   meta: [
     {
-      name: "description",
-      content: "Qwik site description",
+      name: 'description',
+      content: 'Qwik site description',
     },
   ],
 };

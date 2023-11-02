@@ -1,4 +1,4 @@
-import type { PropFunction } from "@builder.io/qwik";
+import type { PropFunction } from '@builder.io/qwik';
 import {
   component$,
   Slot,
@@ -8,28 +8,30 @@ import {
   $,
   noSerialize,
   type NoSerialize,
-} from "@builder.io/qwik";
-import { UserManager, type UserManagerSettings } from "oidc-client-ts";
+} from '@builder.io/qwik';
+import { UserManager, type UserManagerSettings } from 'oidc-client-ts';
 import type {
   SignoutRedirectArgs,
   SignoutPopupArgs,
   SignoutSilentArgs,
-  ProcessResourceOwnerPasswordCredentialsArgs,
   User,
-} from "oidc-client-ts";
-import type { AuthContext, MaybeAuthContext } from "~/contexts/auth";
-import { useProvideAuthContext } from "~/contexts/auth";
+} from 'oidc-client-ts';
+import type { AuthContext, MaybeAuthContext } from '~/contexts/auth';
+import { useProvideAuthContext } from '~/contexts/auth';
+import type {
+  BoundUserManagerMethods,
+  StatefulNavigatorMethods,
+} from '~/utils/auth';
 import {
   hasAuthParams,
   loginError,
   unsupportedEnvironmentErrorMessage,
-  throwUnsupportedEnvironmentError,
-} from "~/utils/auth";
-import {
-  initialAuthState,
-  userManagerContextKeys,
-  navigatorKeys,
-} from "~/constants/auth";
+  shallowCloneAndBindThisToUserManagerMethods,
+  shallowCloneUserManagerSettingsAndEvents,
+  mapToStatefulNavigatorMethods,
+} from '~/utils/auth';
+import type { userManagerContextKeys } from '~/constants/auth';
+import { initialAuthState } from '~/constants/auth';
 
 // The auth state which, when combined with the auth methods, make up the return object of the `useAuth` hook.
 export interface AuthState {
@@ -52,13 +54,13 @@ export interface AuthState {
    * Tracks the status of most recent signin/signout request method.
    */
   activeNavigator?:
-    | "signinRedirect"
-    | "signinResourceOwnerCredentials"
-    | "signinPopup"
-    | "signinSilent"
-    | "signoutRedirect"
-    | "signoutPopup"
-    | "signoutSilent";
+    | 'signinRedirect'
+    | 'signinResourceOwnerCredentials'
+    | 'signinPopup'
+    | 'signinSilent'
+    | 'signoutRedirect'
+    | 'signoutPopup'
+    | 'signoutSilent';
 
   /**
    * Was there a signin or silent renew error?
@@ -66,19 +68,29 @@ export interface AuthState {
   error?: Error;
 }
 
-type StoreDispatch =
-  | { type: "INITIALISED" | "USER_LOADED"; user: User | null }
-  | { type: "USER_UNLOADED" }
+export type StoreDispatch =
   | {
-      type: "NAVIGATOR_INIT";
-      method: NonNullable<AuthState["activeNavigator"]>;
+      type: 'INITIALISED' | 'USER_LOADED';
+      user: User | null;
     }
-  | { type: "NAVIGATOR_CLOSE" }
-  | { type: "ERROR"; error: Error };
+  | {
+      type: 'USER_UNLOADED';
+    }
+  | {
+      type: 'NAVIGATOR_INIT';
+      method: NonNullable<AuthState['activeNavigator']>;
+    }
+  | {
+      type: 'NAVIGATOR_CLOSE';
+    }
+  | {
+      type: 'ERROR';
+      error: Error;
+    };
 
 export type AuthProviderProps = Pick<
   UserManagerSettings,
-  "redirect_uri" | "client_id" | "authority"
+  'redirect_uri' | 'client_id' | 'authority'
 > & {
   /**
    * On sign in callback hook. Can be a async function.
@@ -120,7 +132,7 @@ export type AuthProviderProps = Pick<
    * }
    * ```
    */
-  onRemoveUser?: PropFunction<() => Promise<void | void>>;
+  onRemoveUser?: PropFunction<() => Promise<void> | void>;
 };
 
 // Provides the `AuthContext` to its child components.
@@ -134,7 +146,7 @@ const AuthProvider = component$(
     authority,
   }: AuthProviderProps) => {
     const userManager = useSignal<NoSerialize<UserManager>>(
-      noSerialize(undefined),
+      noSerialize(undefined)
     );
 
     useVisibleTask$(() => {
@@ -143,18 +155,20 @@ const AuthProvider = component$(
           redirect_uri,
           client_id,
           authority,
-        }),
+        })
       );
     });
 
     const store = useStore({
       dispatch: $(function (
-        this: { auth: AuthState },
-        action: StoreDispatch,
+        this: {
+          auth: AuthState;
+        },
+        action: StoreDispatch
       ): AuthState {
         switch (action.type) {
-          case "INITIALISED":
-          case "USER_LOADED":
+          case 'INITIALISED':
+          case 'USER_LOADED':
             return {
               ...this.auth,
               user: action.user,
@@ -162,26 +176,26 @@ const AuthProvider = component$(
               isAuthenticated: action.user ? !action.user.expired : false,
               error: undefined,
             } satisfies AuthState;
-          case "USER_UNLOADED":
+          case 'USER_UNLOADED':
             return {
               ...this.auth,
               user: undefined,
               isAuthenticated: false,
             } satisfies AuthState;
-          case "NAVIGATOR_INIT":
+          case 'NAVIGATOR_INIT':
             return {
               ...this.auth,
               isLoading: true,
               activeNavigator: action.method,
             } satisfies AuthState;
-          case "NAVIGATOR_CLOSE":
+          case 'NAVIGATOR_CLOSE':
             // we intentionally don't handle cases where multiple concurrent navigators are open
             return {
               ...this.auth,
               isLoading: false,
               activeNavigator: undefined,
             } satisfies AuthState;
-          case "ERROR":
+          case 'ERROR':
             return {
               ...this.auth,
               isLoading: false,
@@ -191,67 +205,51 @@ const AuthProvider = component$(
             return {
               ...this.auth,
               isLoading: false,
-              error: new Error(`unknown type ${action["type"] as string}`),
+              error: new Error(`unknown type ${action['type'] as string}`),
             } satisfies AuthState;
         }
       }),
       auth: noSerialize({ ...initialAuthState }),
     });
 
+    /**
+     * NOTE: Implied type declaration from `react-oidc-context`
+     * FIXME: Remove this commented code once we're confident
+     */
+    // type UserManagerContext = {
+    //   settings: AuthContext['settings'];
+    //   events: AuthContext['events'];
+    // } & Pick<UserManager, (typeof userManagerContextKeys)[number]> &
+    //   Pick<UserManager, (typeof navigatorKeys)[number]>;
+
     type UserManagerContext = {
-      settings: AuthContext["settings"];
-      events: AuthContext["events"];
-    } & Pick<UserManager, (typeof userManagerContextKeys)[number]> &
-      Pick<UserManager, (typeof navigatorKeys)[number]>;
+      settings: AuthContext['settings'];
+      events: AuthContext['events'];
+    } & BoundUserManagerMethods &
+      StatefulNavigatorMethods;
     const userManagerContext = useSignal<NoSerialize<UserManagerContext>>();
     // Initialize user manager context
     useVisibleTask$(() => {
-      if (!userManager.value) throw new Error("`userManager` is undefined");
+      if (!userManager.value) throw new Error('`userManager` is undefined');
       const _userManager = userManager.value;
 
-      userManagerContext.value = noSerialize(
-        Object.assign(
-          {
-            settings: userManager.value.settings,
-            events: userManager.value.events,
-          },
-          Object.fromEntries(
-            userManagerContextKeys.map((key) => [
-              key,
-              _userManager[key]?.bind(_userManager) ??
-                throwUnsupportedEnvironmentError(key),
-            ]),
-          ) satisfies Pick<
-            UserManager,
-            (typeof userManagerContextKeys)[number]
-          >,
-          Object.fromEntries(
-            navigatorKeys.map((key) => [
-              key,
-              _userManager[key]
-                ? async (
-                    args: ProcessResourceOwnerPasswordCredentialsArgs & never[],
-                  ) => {
-                    store.dispatch({
-                      type: "NAVIGATOR_INIT",
-                      method: key,
-                    });
+      const userManagerSettingsAndEvents =
+        shallowCloneUserManagerSettingsAndEvents(_userManager);
 
-                    try {
-                      return await _userManager[key](args);
-                    } catch (error) {
-                      store.dispatch({ type: "ERROR", error: error as Error });
+      const userManagerMethods = shallowCloneAndBindThisToUserManagerMethods(
+        _userManager
+      ) satisfies Pick<UserManager, (typeof userManagerContextKeys)[number]>;
 
-                      return null;
-                    } finally {
-                      store.dispatch({ type: "NAVIGATOR_CLOSE" });
-                    }
-                  }
-                : throwUnsupportedEnvironmentError(key),
-            ]),
-          ) satisfies Pick<UserManager, (typeof navigatorKeys)[number]>,
-        ) satisfies UserManagerContext,
+      const statefulNavigationMethods = mapToStatefulNavigatorMethods(
+        store.dispatch,
+        _userManager
       );
+
+      userManagerContext.value = noSerialize({
+        ...userManagerSettingsAndEvents,
+        ...userManagerMethods,
+        ...statefulNavigationMethods,
+      } satisfies UserManagerContext);
     });
 
     const didInitialize = useSignal(false);
@@ -275,9 +273,9 @@ const AuthProvider = component$(
           }
           user = !user ? await userManager.value.getUser() : user;
 
-          store.dispatch({ type: "INITIALISED", user });
+          await store.dispatch({ type: 'INITIALISED', user });
         } catch (error) {
-          store.dispatch({ type: "ERROR", error: loginError(error) });
+          await store.dispatch({ type: 'ERROR', error: loginError(error) });
         }
       })();
     });
@@ -291,19 +289,19 @@ const AuthProvider = component$(
 
       // event `UserLoaded` (e.g. initial load, silent renew success)
       const handleUserLoaded = (user: User) => {
-        store.dispatch({ type: "USER_LOADED", user });
+        void store.dispatch({ type: 'USER_LOADED', user });
       };
       userManager.value.events.addUserLoaded(handleUserLoaded);
 
       // event `UserUnloaded` (e.g. userManager.removeUser)
       const handleUserUnloaded = () => {
-        store.dispatch({ type: "USER_UNLOADED" });
+        void store.dispatch({ type: 'USER_UNLOADED' });
       };
       userManager.value.events.addUserUnloaded(handleUserUnloaded);
 
       // event `SilentRenewError` (silent renew error)
       const handleSilentRenewError = (error: Error) => {
-        store.dispatch({ type: "ERROR", error });
+        void store.dispatch({ type: 'ERROR', error });
       };
       userManager.value.events.addSilentRenewError(handleSilentRenewError);
 
@@ -330,7 +328,7 @@ const AuthProvider = component$(
       // Dependency array: [userManager, onRemoveUser]
       const removeUser = () => {
         if (!userManager.value)
-          throw new Error(unsupportedEnvironmentErrorMessage("removeUser"));
+          throw new Error(unsupportedEnvironmentErrorMessage('removeUser'));
 
         const _userManager = userManager.value;
 
@@ -338,15 +336,15 @@ const AuthProvider = component$(
       };
 
       // Dependency array: [userManagerContext.signoutRedirect, onSignoutRedirect]
-      const signoutRedirect = (args?: SignoutRedirectArgs) =>
+      const signoutRedirect = (args: SignoutRedirectArgs) =>
         _userManagerContext.signoutRedirect(args);
 
       // Dependency array: [userManagerContext.signoutPopup, onSignoutPopup]
-      const signoutPopup = (args?: SignoutPopupArgs) =>
+      const signoutPopup = (args: SignoutPopupArgs) =>
         _userManagerContext.signoutPopup(args);
 
       // Dependency array: [userManagerContext.signoutSilent]
-      const signoutSilent = (args?: SignoutSilentArgs) =>
+      const signoutSilent = (args: SignoutSilentArgs) =>
         _userManagerContext.signoutSilent(args);
 
       authContext.value = noSerialize({
@@ -368,7 +366,7 @@ const AuthProvider = component$(
         <pre>{JSON.stringify(userManagerContext.value, null, 4)}</pre>
       </>
     );
-  },
+  }
 );
 
 export default AuthProvider;
